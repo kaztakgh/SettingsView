@@ -102,11 +102,6 @@ afterEvaluate {
                 artifactId = "settings-view"
                 version = android.defaultConfig.versionName
             }
-            create<MavenPublication>("debug") {
-                groupId = "io.github.kaztakgh.settingsview"
-                artifactId = "settings-view-debug"
-                version = android.defaultConfig.versionName
-            }
         }
 
         repositories {
@@ -114,7 +109,7 @@ afterEvaluate {
             mavenCentral()
             maven {
                 name = "SettingsViewGitHubPackages"
-                url = uri("https://github.com/kaztakgh/SettingsView")
+                url = uri("https://maven.pkg.github.com/kaztakgh/SettingsView")
                 credentials {
                     val gitAccessToken = properties["git_access_token"]
                     username = "kaztakgh"
