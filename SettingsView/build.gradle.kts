@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-android")
     id("kotlin-parcelize")
+    id("maven-publish")
 }
 
 android {
@@ -91,4 +92,35 @@ dependencies {
     // Mockito
     testImplementation("org.mockito:mockito-core:5.8.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                groupId = "io.github.kaztakgh.settingsview"
+                artifactId = "settings-view"
+                version = android.defaultConfig.versionName
+            }
+            create<MavenPublication>("debug") {
+                groupId = "io.github.kaztakgh.settingsview"
+                artifactId = "settings-view-debug"
+                version = android.defaultConfig.versionName
+            }
+        }
+
+        repositories {
+            google()
+            mavenCentral()
+            maven {
+                name = "SettingsViewGitHubPackages"
+                url = uri("https://github.com/kaztakgh/SettingsView")
+                credentials {
+                    val gitAccessToken = properties["git_access_token"]
+                    username = "kaztakgh"
+                    password = "$gitAccessToken"
+                }
+            }
+        }
+    }
 }
