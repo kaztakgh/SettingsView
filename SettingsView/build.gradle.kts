@@ -98,9 +98,10 @@ afterEvaluate {
     publishing {
         publications {
             create<MavenPublication>("release") {
-                groupId = "io.github.kaztakgh.settingsview"
-                artifactId = "settings-view"
+                groupId = "io.github.kaztakgh"
+                artifactId = "settingsview"
                 version = android.defaultConfig.versionName
+                from(components.findByName("release"))
             }
         }
 
@@ -108,12 +109,11 @@ afterEvaluate {
             google()
             mavenCentral()
             maven {
-                name = "SettingsViewGitHubPackages"
-                url = uri("https://maven.pkg.github.com/kaztakgh/SettingsView")
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/kaztakgh/repo")
                 credentials {
-                    val gitAccessToken = properties["git_access_token"]
-                    username = "kaztakgh"
-                    password = "$gitAccessToken"
+                    username = findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+                    password = findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
                 }
             }
         }
