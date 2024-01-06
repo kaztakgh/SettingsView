@@ -94,28 +94,26 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("release") {
-                groupId = "io.github.kaztakgh"
-                artifactId = "settingsview"
-                version = android.defaultConfig.versionName
-                from(components.findByName("release"))
-            }
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components.findByName("java"))
         }
-
-        repositories {
-            google()
-            mavenCentral()
-            maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/kaztakgh/repo")
-                credentials {
-                    username = findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
-                    password = findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
-                }
+    }
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/kaztakgh/SettingsView")
+            credentials {
+                username = findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+                password = findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
             }
         }
     }
+}
+
+tasks.register("publishToGitHubPackages") {
+    dependsOn(":SettingsView:publishMavenJavaPublicationToGitHubPackagesRepository")
 }
