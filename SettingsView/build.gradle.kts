@@ -12,11 +12,11 @@ android {
 
     defaultConfig {
         minSdk = 24
-        version = "0.1"
+        version = "0.1.1"
         multiDexEnabled = true
 
         // aarファイル名の設定
-        setProperty("archivesBaseName", "SettingsView-${version}")
+        setProperty("archivesBaseName", "settingsview-${version}")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
@@ -98,11 +98,14 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components.findByName("java"))
+            pom {
+                groupId = "io.github.kaztakgh"
+                artifactId = "setting-view"
+                version = "0.1.1"
+            }
         }
     }
     repositories {
-        google()
-        mavenCentral()
         maven {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/kaztakgh/SettingsView")
