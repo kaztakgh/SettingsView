@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-android")
     id("kotlin-parcelize")
+    id("maven-publish")
 }
 
 android {
@@ -11,11 +12,11 @@ android {
 
     defaultConfig {
         minSdk = 24
-        version = "0.1"
+        version = "0.1.1"
         multiDexEnabled = true
 
         // aarファイル名の設定
-        setProperty("archivesBaseName", "SettingsView-${version}")
+        setProperty("archivesBaseName", "settingsview-${version}")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
@@ -91,4 +92,31 @@ dependencies {
     // Mockito
     testImplementation("org.mockito:mockito-core:5.8.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components.findByName("java"))
+            pom {
+                groupId = "io.github.kaztakgh"
+                artifactId = "setting-view"
+                version = "0.1.1"
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/kaztakgh/SettingsView")
+            credentials {
+                username = findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+                password = findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
+            }
+        }
+    }
+}
+
+tasks.register("publishToGitHubPackages") {
+    dependsOn(":SettingsView:publishMavenJavaPublicationToGitHubPackagesRepository")
 }
