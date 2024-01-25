@@ -19,7 +19,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial
  * @property textOnTrue スイッチがONの時の表示テキスト
  * @property textOnFalse スイッチがOFFの時の表示テキスト
  */
-class ToggleSwitchItemViewHolder(view: View)
+internal class ToggleSwitchItemViewHolder(view: View)
     : NormalItemViewHolder(view) {
     companion object {
         /**

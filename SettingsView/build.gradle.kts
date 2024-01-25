@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         minSdk = 24
-        version = "0.1.1"
+        version = "0.1.2"
         multiDexEnabled = true
 
         // aarファイル名の設定
@@ -100,8 +100,9 @@ publishing {
             from(components.findByName("java"))
             pom {
                 groupId = "io.github.kaztakgh"
-                artifactId = "setting-view"
-                version = "0.1.1"
+                artifactId = "settings-view"
+                version = "0.1.2"
+                artifact("$buildDir/outputs/aar/settingsview-$version-release.aar")
             }
         }
     }

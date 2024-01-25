@@ -3,9 +3,13 @@
  */
 package io.github.kaztakgh.settingsview
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 //import androidx.databinding.DataBindingUtil
 //import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
@@ -19,7 +23,7 @@ import androidx.recyclerview.widget.RecyclerView.ViewHolder
  */
 class SettingsViewAdapter(
     var settingItemsList: ArrayList<SettingItems>
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>(){
+) : RecyclerView.Adapter<ViewHolder>(){
     companion object {
         /**
          * 通常(タイトルとテキスト)
@@ -46,6 +50,11 @@ class SettingsViewAdapter(
          */
         const val VIEW_TYPE_HEADER: Int = 5
     }
+
+    /**
+     * parentViewのContext
+     */
+    private lateinit var context: Context
 
     /**
      * 紐づけたSettingsView
@@ -112,7 +121,8 @@ class SettingsViewAdapter(
      * @see .onBindViewHolder
      */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val layoutInflater = LayoutInflater.from(parent.context)
+        this.context = parent.context
+        val layoutInflater = LayoutInflater.from(this.context)
         // DataBindingの箇所が利用しづらい状況
         when (viewType) {
             VIEW_TYPE_SWITCH -> {
@@ -122,6 +132,20 @@ class SettingsViewAdapter(
                     false
                 )
                 val holder = ToggleSwitchItemViewHolder(view)
+                view.setOnClickListener { v ->
+                    this.parentView.let {
+                        holder.itemClickListener?.onItemClick(v, it!!.getChildAdapterPosition(v))
+                    }
+                }
+                return holder
+            }
+            VIEW_TYPE_SPINNER -> {
+                val view = layoutInflater.inflate(
+                    R.layout.layout_spinner,
+                    parent,
+                    false
+                )
+                val holder = SpinnerChoiceItemViewHolder(view)
                 view.setOnClickListener { v ->
                     this.parentView.let {
                         holder.itemClickListener?.onItemClick(v, it!!.getChildAdapterPosition(v))
@@ -162,6 +186,7 @@ class SettingsViewAdapter(
     override fun getItemViewType(position: Int): Int {
         return when (this.settingItemsList[position]) {
             is ToggleSwitch -> VIEW_TYPE_SWITCH
+            is SpinnerChoice -> VIEW_TYPE_SPINNER
             else -> VIEW_TYPE_NORMAL
         }
     }
@@ -201,7 +226,12 @@ class SettingsViewAdapter(
             is ToggleSwitch -> {
                 val viewHolder = holder as ToggleSwitchItemViewHolder
                 val updateItem: ToggleSwitch = item
-                bindSwitchItemViewHolder(viewHolder, updateItem)
+                this.bindSwitchItemViewHolder(viewHolder, updateItem)
+            }
+            is SpinnerChoice -> {
+                val viewHolder = holder as SpinnerChoiceItemViewHolder
+                val updateItem: SpinnerChoice = item
+                this.bindSpinnerItemViewHolder(viewHolder, updateItem)
             }
             else -> {}
         }
@@ -222,7 +252,7 @@ class SettingsViewAdapter(
      * Switchの表示内容を決定する
      *
      * @param holder [ToggleSwitchItemViewHolder]
-     * @param item リスト内にあるSwitchのデータ
+     * @param item リスト内にあるToggleSwitchのデータ
      */
     private fun bindSwitchItemViewHolder(holder: ToggleSwitchItemViewHolder, item: ToggleSwitch) {
         // 表示内容の指定
@@ -257,7 +287,7 @@ class SettingsViewAdapter(
      * スイッチの状態が変化したときの処理
      *
      * @param holder [ToggleSwitchItemViewHolder]
-     * @param item リスト内にあるSwitchのデータ
+     * @param item リスト内にあるToggleSwitchのデータ
      * @param position アダプター内のリストの順序
      */
     private fun changeSwitchCheck(holder: ToggleSwitchItemViewHolder, item: ToggleSwitch, position: Int) {
@@ -274,5 +304,66 @@ class SettingsViewAdapter(
         if (this.switchCheckedChangeListener != null) {
             this.switchCheckedChangeListener!!.onCheckedChange(position, checked)
         }
+    }
+
+    /**
+     * SpinnerItemの表示内容をitemから指定する
+     *
+     * @param holder [SpinnerChoiceItemViewHolder]
+     * @param item 表示対象のSpinnerChoice
+     */
+    private fun bindSpinnerItemViewHolder(holder: SpinnerChoiceItemViewHolder, item: SpinnerChoice) {
+        // 表示内容の指定
+        holder.title = item.title
+        holder.enabled = item.enabled
+        // 選択肢の設定
+        val optionsSpinner: Spinner = holder.getOptionsSpinner()
+        setSpinnerOptions(optionsSpinner, item.options)
+        optionsSpinner.setSelection(item.select)
+        optionsSpinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
+            /**
+             * 何も選択しなかった場合
+             * もしくはSpinnerの外側をタップした場合
+             *
+             * @param parent The AdapterView that now contains no selected item.
+             */
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+
+            /**
+             * Spinnerで表示しているアイテムを選択した場合の処理
+             *
+             * @param parent The AdapterView where the selection happened
+             * @param view The view within the AdapterView that was clicked
+             * @param position アダプターの選択肢の位置
+             * @param id 選択した列のID
+             */
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                // アイテムの選択を変更
+                (this@SettingsViewAdapter.settingItemsList[holder.bindingAdapterPosition] as SpinnerChoice).select = position
+                // 変更後の処理がある場合
+//                if (item.selectChangeListener != null && item.focusable) {
+//                    item.selectChangeListener!!.onItemSelectChanged(this@SettingItemsAdapter, position)
+//                }
+                // 初回操作時
+                when {
+                    !item.focusable -> item.focusable = true
+                }
+            }
+        }    }
+
+    /**
+     * スピナーの選択肢のセット
+     *
+     * @param spinner セット対象のスピナー
+     * @param options 選択肢
+     */
+    private fun setSpinnerOptions(spinner: Spinner, options: Array<String>) {
+        val spinnerAdapter = ArrayAdapter(
+            this.context,
+            android.R.layout.simple_spinner_item,
+            options
+        )
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner.adapter = spinnerAdapter
     }
 }
