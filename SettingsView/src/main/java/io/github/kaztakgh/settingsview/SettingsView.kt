@@ -92,6 +92,10 @@ class SettingsView : RecyclerView {
                     val item : ToggleSwitch = it
                     bundle.putParcelable(item.keyword, item)
                 }
+                is NumericalSelector -> {
+                    val item : NumericalSelector = it
+                    bundle.putParcelable(item.keyword, item)
+                }
 
                 else -> {}
             }
@@ -136,6 +140,12 @@ class SettingsView : RecyclerView {
                     item.checked = savedItem.checked
                     this.items[index] = item
                 }
+                is NumericalSelector -> {
+                    val item = this.items[index] as NumericalSelector
+                    item.enabled = savedItem.enabled
+                    item.state = savedItem.state
+                    this.items[index] = item
+                }
 
                 else -> {}
             }
@@ -148,7 +158,7 @@ class SettingsView : RecyclerView {
     /**
      * adapterを取得
      *
-     * @return [SettingsListViewAdapter] SettingsListViewAdapter
+     * @return [SettingsViewAdapter] SettingsViewAdapter
      */
     fun getViewAdapter() = adapter as SettingsViewAdapter?
 

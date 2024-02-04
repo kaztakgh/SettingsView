@@ -3,11 +3,14 @@
  */
 package io.github.kaztakgh.settingsview
 
+//import androidx.databinding.DataBindingUtil
+//import androidx.databinding.ViewDataBinding
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-//import androidx.databinding.DataBindingUtil
-//import androidx.databinding.ViewDataBinding
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 
@@ -56,6 +59,11 @@ class SettingsViewAdapter(
      * スイッチの設定項目で、切り替え時における追加処理
      */
     var switchCheckedChangeListener : OnSwitchCheckedChangeListener? = null
+
+    /**
+     * シークバーの設定項目で、変更時における追加処理
+     */
+    var seekBarStateChangeListener : OnSeekBarStateChangeListener? = null
 
     init {
         // keywordが重複した場合はエラーを出力
@@ -129,6 +137,20 @@ class SettingsViewAdapter(
                 }
                 return holder
             }
+            VIEW_TYPE_SEEKBAR -> {
+                val view = layoutInflater.inflate(
+                    R.layout.layout_seekbar,
+                    parent,
+                    false
+                )
+                val holder = NumericalSelectorItemViewHolder(view)
+                view.setOnClickListener { v ->
+                    this.parentView.let {
+                        holder.itemClickListener?.onItemClick(v, it!!.getChildAdapterPosition(v))
+                    }
+                }
+                return holder
+            }
             else -> {
                 val view = layoutInflater.inflate(
                     R.layout.layout_normal,
@@ -162,6 +184,7 @@ class SettingsViewAdapter(
     override fun getItemViewType(position: Int): Int {
         return when (this.settingItemsList[position]) {
             is ToggleSwitch -> VIEW_TYPE_SWITCH
+            is NumericalSelector -> VIEW_TYPE_SEEKBAR
             else -> VIEW_TYPE_NORMAL
         }
     }
@@ -203,6 +226,11 @@ class SettingsViewAdapter(
                 val updateItem: ToggleSwitch = item
                 bindSwitchItemViewHolder(viewHolder, updateItem)
             }
+            is NumericalSelector -> {
+                val viewHolder = holder as NumericalSelectorItemViewHolder
+                val updateItem: NumericalSelector = item
+                bindNumericalSelectorItemViewHolder(viewHolder, updateItem)
+            }
             else -> {}
         }
     }
@@ -219,10 +247,10 @@ class SettingsViewAdapter(
     }
 
     /**
-     * Switchの表示内容を決定する
+     * ToggleSwitchの表示内容を決定する
      *
      * @param holder [ToggleSwitchItemViewHolder]
-     * @param item リスト内にあるSwitchのデータ
+     * @param item リスト内にあるToggleSwitchのデータ
      */
     private fun bindSwitchItemViewHolder(holder: ToggleSwitchItemViewHolder, item: ToggleSwitch) {
         // 表示内容の指定
@@ -257,10 +285,14 @@ class SettingsViewAdapter(
      * スイッチの状態が変化したときの処理
      *
      * @param holder [ToggleSwitchItemViewHolder]
-     * @param item リスト内にあるSwitchのデータ
+     * @param item リスト内にあるToggleSwitchのデータ
      * @param position アダプター内のリストの順序
      */
-    private fun changeSwitchCheck(holder: ToggleSwitchItemViewHolder, item: ToggleSwitch, position: Int) {
+    private fun changeSwitchCheck(
+        holder: ToggleSwitchItemViewHolder,
+        item: ToggleSwitch,
+        position: Int
+    ) {
         val listItem: ToggleSwitch = this.settingItemsList[position] as ToggleSwitch
         // スイッチの操作ができない状態の場合はここで終了
         // returnをここで指定しているのは、2通り(ViewHolder内部、スイッチ)の操作で変更できてしまうため
@@ -274,5 +306,122 @@ class SettingsViewAdapter(
         if (this.switchCheckedChangeListener != null) {
             this.switchCheckedChangeListener!!.onCheckedChange(position, checked)
         }
+    }
+
+    /**
+     * NumericalSelectorの表示内容を決定する
+     *
+     * @param holder [NumericalSelectorItemViewHolder]
+     * @param item リスト内にあるNumericalSelectorのデータ
+     */
+    private fun bindNumericalSelectorItemViewHolder(
+        holder: NumericalSelectorItemViewHolder,
+        item: NumericalSelector
+    ) {
+        // 表示内容の決定
+        // paramsArrayの設定有無、BuildVersionによって作成の仕方が変わってくる
+        holder.title = item.title
+        holder.enabled = item.enabled
+        holder.setIconFromDrawableId(item.iconId)
+        // paramsArrayの設定がある場合、配列の要素数をSeekBarのprogressに変換する
+        if (item.paramsArray != null && item.paramsArray.isNotEmpty()) {
+            // 入力した配列のサイズに変換
+            // 最小値は0になるため、最大値は配列のサイズ-1に設定する
+            holder.max = item.paramsArray.size - 1
+            holder.min = 0
+            // 設定した数値から位置を探す
+            // (見つからない場合はつまみを一番左に置く)
+            val arrayPos: Int = item.paramsArray.indexOf(item.state)
+            holder.state = if (arrayPos > -1) arrayPos else 0
+            holder.text = item.paramsArray[holder.state].toString() + item.unit
+        }
+        // 目盛りが1ではない場合、配列への変換が必要になる
+        else if (item.divine > 1) {
+            val range: Int = item.max - item.min
+            val size: Int = range / item.divine + 1
+            holder.max = size - 1
+            holder.min = 0
+            val arrayPos: Int = (item.state - item.min) / range * item.divine
+            holder.state = arrayPos
+            holder.text = item.state.toString() + item.unit
+        }
+        // BuildVersionがOreo以降の場合、minが設定可能
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            holder.state = item.state
+            holder.max = item.max
+            holder.min = item.min
+            holder.text = item.state.toString() + item.unit
+        }
+        // BuildVersionがNougatの場合、minが設定できないため、maxとprogressはminの数値だけ引く
+        else {
+            holder.max = item.max - item.min
+            holder.state = item.state - item.min
+            holder.text = item.state.toString() + item.unit
+        }
+        val seekBar: SeekBar = holder.getSeekBar()
+
+        // アイテムが無効時の場合は以降の処理を行わない
+        if (!item.enabled) return
+        seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+            /**
+             * Notification that the progress level has changed. Clients can use the fromUser parameter
+             * to distinguish user-initiated changes from those that occurred programmatically.
+             *
+             * @param seekBar The SeekBar whose progress has changed
+             * @param progress The current progress level. This will be in the range min..max where min
+             * and max were set by [ProgressBar.setMin] and
+             * [ProgressBar.setMax], respectively. (The default values for
+             * min is 0 and max is 100.)
+             * @param fromUser True if the progress change was initiated by the user.
+             */
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                this@SettingsViewAdapter.changeSeekBarProgress(holder, item, progress)
+            }
+
+            /**
+             * Notification that the user has started a touch gesture. Clients may want to use this
+             * to disable advancing the seekbar.
+             * @param seekBar The SeekBar in which the touch gesture began
+             */
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
+            /**
+             * Notification that the user has finished a touch gesture. Clients may want to use this
+             * to re-enable advancing the seekbar.
+             * @param seekBar The SeekBar in which the touch gesture began
+             */
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                if (this@SettingsViewAdapter.seekBarStateChangeListener != null) {
+                    this@SettingsViewAdapter.seekBarStateChangeListener!!.onItemValueChange(
+                        this@SettingsViewAdapter,
+                        item.state
+                    )
+                }
+            }
+        })
+    }
+
+    /**
+     * シークバーのつまみを動かしたときに表示内容を変更する
+     *
+     * @param holder [NumericalSelectorItemViewHolder]
+     * @param item リスト内にあるNumericalSelectorのデータ
+     * @param progress シークバーのprogress
+     */
+    private fun changeSeekBarProgress(
+        holder: NumericalSelectorItemViewHolder,
+        item: NumericalSelector,
+        progress: Int
+    ) {
+        // アイテムの数値を変更
+        // paramsArrayの有無、BuildVersionにより表示方法が異なる
+        item.state = if (item.paramsArray != null && item.paramsArray.isNotEmpty())
+            item.paramsArray[progress]
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            progress
+        else
+            progress + item.min
+        // 表記をSeekBarの内容に合わせて変更
+        holder.text = item.state.toString() + item.unit
     }
 }
