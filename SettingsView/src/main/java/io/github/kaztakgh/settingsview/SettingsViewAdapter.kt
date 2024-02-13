@@ -3,20 +3,18 @@
  */
 package io.github.kaztakgh.settingsview
 
-import android.content.Context
 //import androidx.databinding.DataBindingUtil
 //import androidx.databinding.ViewDataBinding
+import android.content.Context
 import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Spinner
-//import androidx.databinding.DataBindingUtil
-//import androidx.databinding.ViewDataBinding
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
+import android.widget.Spinner
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 
