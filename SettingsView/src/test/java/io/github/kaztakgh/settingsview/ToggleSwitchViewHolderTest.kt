@@ -24,6 +24,9 @@ class ToggleSwitchViewHolderTest {
         this.settingsView = activity.findViewById(io.github.kaztakgh.settingsview.test.R.id.settingsView)
     }
 
+    /**
+     * 表示内容を確認する
+     */
     @Test
     fun displayViewHolder() {
         // 絵画が完了したときにしかテストできないため、ViewTreeObserver内部にテストを記述
@@ -120,6 +123,9 @@ class ToggleSwitchViewHolderTest {
         })
     }
 
+    /**
+     * ViewHolderをクリックしたときの動作の確認
+     */
     @Test
     fun changeSwitchStateOnClickViewHolder() {
         // 絵画が完了したときにしかテストできないため、ViewTreeObserver内部にテストを記述
@@ -192,6 +198,9 @@ class ToggleSwitchViewHolderTest {
         })
     }
 
+    /**
+     * スイッチをクリックしたときの動作確認
+     */
     @Test
     fun changeSwitchStateOnClickToggleSwitch() {
         // 絵画が完了したときにしかテストできないため、ViewTreeObserver内部にテストを記述
