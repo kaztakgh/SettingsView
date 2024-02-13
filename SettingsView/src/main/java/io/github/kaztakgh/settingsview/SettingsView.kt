@@ -87,13 +87,18 @@ class SettingsView : RecyclerView {
         (adapter as SettingsViewAdapter).settingItemsList.forEach {
             when (it) {
                 is ToggleSwitch -> {
-                    val item: ToggleSwitch = it
+                    val item : ToggleSwitch = it
                     bundle.putParcelable(item.keyword, item)
                 }
                 is SpinnerChoice -> {
                     val item: SpinnerChoice = it
                     bundle.putParcelable(item.keyword, item)
                 }
+                is NumericalSelector -> {
+                    val item : NumericalSelector = it
+                    bundle.putParcelable(item.keyword, item)
+                }
+
                 else -> {}
             }
         }
@@ -144,6 +149,13 @@ class SettingsView : RecyclerView {
                     item.focusable = savedItem.focusable
                     this.items[index] = item
                 }
+                is NumericalSelector -> {
+                    val item = this.items[index] as NumericalSelector
+                    item.enabled = savedItem.enabled
+                    item.state = savedItem.state
+                    this.items[index] = item
+                }
+
                 else -> {}
             }
         }
