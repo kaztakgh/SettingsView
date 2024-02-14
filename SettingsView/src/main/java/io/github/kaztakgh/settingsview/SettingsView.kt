@@ -29,14 +29,12 @@ import androidx.recyclerview.widget.RecyclerView
  * @property fragmentManager fragmentと同様にFragmentから表示する場合のみ指定
  */
 class SettingsView : RecyclerView {
+    /**
+     * 復元用のSettingItemsのArrayList
+     */
     private var items = ArrayList<SettingItems>()
     var fragment: Fragment? = null
     var fragmentManager: FragmentManager? = null
-
-    /**
-     * 表示用のアダプター
-     */
-//    private var displayAdapter: SettingsViewAdapter? = null
 
     /**
      * 画面上で見える一番上の要素の順番(0開始)
@@ -92,6 +90,14 @@ class SettingsView : RecyclerView {
                     val item : ToggleSwitch = it
                     bundle.putParcelable(item.keyword, item)
                 }
+                is SpinnerChoice -> {
+                    val item: SpinnerChoice = it
+                    bundle.putParcelable(item.keyword, item)
+                }
+                is NumericalSelector -> {
+                    val item : NumericalSelector = it
+                    bundle.putParcelable(item.keyword, item)
+                }
 
                 else -> {}
             }
@@ -136,6 +142,19 @@ class SettingsView : RecyclerView {
                     item.checked = savedItem.checked
                     this.items[index] = item
                 }
+                is SpinnerChoice -> {
+                    val item = this.items[index] as SpinnerChoice
+                    item.enabled = savedItem.enabled
+                    item.select = savedItem.select
+                    item.focusable = savedItem.focusable
+                    this.items[index] = item
+                }
+                is NumericalSelector -> {
+                    val item = this.items[index] as NumericalSelector
+                    item.enabled = savedItem.enabled
+                    item.state = savedItem.state
+                    this.items[index] = item
+                }
 
                 else -> {}
             }
@@ -148,7 +167,7 @@ class SettingsView : RecyclerView {
     /**
      * adapterを取得
      *
-     * @return [SettingsListViewAdapter] SettingsListViewAdapter
+     * @return [SettingsViewAdapter] SettingsViewAdapter
      */
     fun getViewAdapter() = adapter as SettingsViewAdapter?
 
