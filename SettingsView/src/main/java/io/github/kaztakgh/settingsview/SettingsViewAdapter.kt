@@ -259,7 +259,12 @@ class SettingsViewAdapter(
             is NumericalSelector -> {
                 val viewHolder = holder as NumericalSelectorItemViewHolder
                 val updateItem: NumericalSelector = item
-                bindNumericalSelectorItemViewHolder(viewHolder, updateItem)
+                this.bindNumericalSelectorItemViewHolder(viewHolder, updateItem)
+            }
+            is StorageFileSelect -> {
+                val viewHolder = holder as NormalItemViewHolder
+                val updateItem: StorageFileSelect = item
+                this.bindFileSelectItemViewHolder(viewHolder, updateItem)
             }
             else -> {}
         }
@@ -514,5 +519,44 @@ class SettingsViewAdapter(
             progress + item.min
         // 表記をSeekBarの内容に合わせて変更
         holder.text = item.state.toString() + item.unit
+    }
+
+    /**
+     * StorageFileSelectItemの表示内容をitemから指定する
+     *
+     * @param holder アイテムを表示するビューホルダー
+     * @param item 表示対象のStorageFileSelect
+     */
+    private fun bindFileSelectItemViewHolder(
+        holder: NormalItemViewHolder,
+        item: StorageFileSelect
+    ) {
+        // 表示項目の設定
+        holder.title = item.title
+        holder.setIconFromDrawableId(item.iconId)
+        holder.enabled = item.enabled
+        // ファイルパスの設定
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            holder.text = if (item.uri != null) item.getContentFilePathDescriptor(context) else ""
+        }
+        else {
+            holder.text = if (item.uri != null) item.getContentPathStringFromUri(context) else ""
+        }
+        // クリックされたときの挙動を指定する
+        holder.itemClickListener = object : NormalItemViewHolder.ItemClickListener {
+            /**
+             * アイテムをクリックしたときの処理
+             *
+             * パーミッションチェックが必要になる
+             *
+             * @param view レイアウトビュー
+             * @param position アダプター内のアイテムの位置
+             */
+            override fun onItemClick(view: View, position: Int) {
+                // パーミッションの取得
+                // 要素の外で記述する場合、全て書くのは避けたい
+                item.requestPermission(this@SettingsViewAdapter.context)
+            }
+        }
     }
 }

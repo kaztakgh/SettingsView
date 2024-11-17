@@ -98,6 +98,10 @@ class SettingsView : RecyclerView {
                     val item : NumericalSelector = it
                     bundle.putParcelable(item.keyword, item)
                 }
+                is StorageFileSelect -> {
+                    val item : StorageFileSelect = it
+                    bundle.putParcelable(item.keyword, item)
+                }
 
                 else -> {}
             }
@@ -153,6 +157,12 @@ class SettingsView : RecyclerView {
                     val item = this.items[index] as NumericalSelector
                     item.enabled = savedItem.enabled
                     item.state = savedItem.state
+                    this.items[index] = item
+                }
+                is StorageFileSelect -> {
+                    val item = this.items[index] as StorageFileSelect
+                    item.enabled = savedItem.enabled
+                    item.uri = savedItem.uri
                     this.items[index] = item
                 }
 
