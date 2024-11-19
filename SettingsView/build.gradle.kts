@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         minSdk = 24
-        version = "0.2.1.1"
+        version = "0.2.1.2"
         multiDexEnabled = true
 
         // aarファイル名の設定
