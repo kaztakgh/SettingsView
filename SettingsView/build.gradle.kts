@@ -101,7 +101,7 @@ publishing {
             pom {
                 groupId = "io.github.kaztakgh"
                 artifactId = "settings-view"
-                version = "0.2.1.1"
+                version = "0.2.1.2"
                 artifact("$buildDir/outputs/aar/settingsview-$version-release.aar")
             }
         }
