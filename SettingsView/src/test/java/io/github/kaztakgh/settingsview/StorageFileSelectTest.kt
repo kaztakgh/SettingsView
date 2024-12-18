@@ -1,5 +1,6 @@
 package io.github.kaztakgh.settingsview
 
+import android.net.Uri
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
@@ -21,8 +22,8 @@ class StorageFileSelectTest {
                 enabled = true,
                 uri = null,
                 mimeType = "*/*",
-                requestCode = 10,
-                displayFullPath = true
+                displayFullPath = true,
+                onItemClick = { uri: Uri -> return@StorageFileSelect }
             )
         }
         // エラーメッセージの出力を確認
@@ -42,8 +43,8 @@ class StorageFileSelectTest {
                 enabled = true,
                 uri = null,
                 mimeType = "*/*",
-                requestCode = 10,
-                displayFullPath = true
+                displayFullPath = true,
+                onItemClick = { uri: Uri -> return@StorageFileSelect }
             )
         }
         // エラーメッセージの出力を確認
@@ -67,7 +68,6 @@ class StorageFileSelectTest {
 //            iconId = null,
 //            enabled = true,
 //            uri = uri,
-//            requestCode = 2
 //        )
 //        val actual = selector.getContentPathStringFromUri(context)
 //        assertEquals(path, actual)

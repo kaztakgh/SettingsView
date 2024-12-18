@@ -271,6 +271,24 @@ class SettingsViewAdapter(
     }
 
     /**
+     * 表示内容を更新する
+     *
+     * @param item 更新する項目
+     */
+    fun update(item: SettingItems) {
+        // 該当するキーワードが存在しない場合は更新を行わない
+        // キーワードはuniqueになるため、indexOfFirstで検索可能
+        val index = this.settingItemsList.indexOfFirst { it.keyword == item.keyword }
+        if (index < 0) return
+        // 項目のクラスを変更しないようにする
+        if (this.settingItemsList[index].javaClass != item.javaClass) return
+
+        // 表示内容を更新
+        this.settingItemsList[index] = item
+        notifyItemChanged(index)
+    }
+
+    /**
      * 識別子の重複チェック
      *
      * @param list 表示に使用するリスト
@@ -386,7 +404,8 @@ class SettingsViewAdapter(
                     !item.focusable -> item.focusable = true
                 }
             }
-        }    }
+        }
+    }
 
     /**
      * スピナーの選択肢のセット
@@ -547,15 +566,14 @@ class SettingsViewAdapter(
             /**
              * アイテムをクリックしたときの処理
              *
-             * パーミッションチェックが必要になる
+             * パーミッションチェックが必要になるが、呼び出し元のstartActivityForResultに
+             * 結果を記述することになるため、ここでは呼び出し動作のみ記述
              *
              * @param view レイアウトビュー
              * @param position アダプター内のアイテムの位置
              */
             override fun onItemClick(view: View, position: Int) {
-                // パーミッションの取得
-                // 要素の外で記述する場合、全て書くのは避けたい
-                item.requestPermission(this@SettingsViewAdapter.context)
+                item.onItemClick
             }
         }
     }

@@ -1,28 +1,21 @@
 package io.github.kaztakgh.settingsview
 
-import android.Manifest
-import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.annotation.TargetApi
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Parcelable
 import android.provider.DocumentsContract
 import android.provider.MediaStore
-import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 /**
  * ファイルを指定するアイテムの作成
  *
- * Permissionの確認が必要になってくる
+ * このアイテムのみ呼び出し元でのPermissionの確認が必要
+ *
+ * また、ファイル選択時の動作は呼び出し元で定義が必要
  *
  * @property keyword View上の設定項目の識別子。省略不可。
  * @property title タイトル。省略不可。
@@ -30,8 +23,8 @@ import kotlinx.parcelize.Parcelize
  * @property enabled 選択可能であるか。デフォルトはtrue。
  * @property uri ファイルの場所を示すURI。デフォルトはnull。
  * @property mimeType ファイルの種類。デフォルトはすべて。
- * @property requestCode リクエストコード。デフォルト値は1。
  * @property displayFullPath 一覧画面でファイルパスをすべて表示するか。デフォルトはfalse。
+ * @property onItemClick ファイル選択時の動作を定義。adapterの更新もここで記述することになる。
  */
 @Parcelize
 data class StorageFileSelect(
@@ -41,8 +34,8 @@ data class StorageFileSelect(
     var enabled: Boolean = true,
     var uri: Uri? = null,
     val mimeType: String = "*/*",
-    val requestCode: Int = 1,
-    val displayFullPath: Boolean = false
+    val displayFullPath: Boolean = false,
+    val onItemClick: (Uri) -> Unit
 ) : SettingItems, Parcelable {
     init {
         // 省略不可のパラメータチェック
@@ -56,77 +49,24 @@ data class StorageFileSelect(
     }
 
     /**
-     * パーミッション情報の取得
+     * デフォルトのファイル選択画面を呼び出すためのIntent
      *
-     * @param context データ
-     */
-    internal fun requestPermission(context: Context) {
-        // 既に許可を得ている場合、ファイル選択のウィンドウを開く
-        if (checkPermission(context)) {
-            this.openDocument(context)
-        }
-        else {
-            // ダイアログ出力許可がある場合
-            if (ActivityCompat.shouldShowRequestPermissionRationale(context as Activity, READ_EXTERNAL_STORAGE)) {
-                // 許可を求めるパーミッションダイアログを出力する
-                ActivityCompat.requestPermissions(
-                    context,
-                    arrayOf(READ_EXTERNAL_STORAGE),
-                    requestCode
-                )
-            }
-            // ダイアログ出力許可がない場合
-            else
-            // 操作できないという警告文を出力する
-                Toast.makeText(context, "デバイス上のファイルを操作できません", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    /**
-     * WRITE_EXTERNAL_STORAGEのパーミッション確認
+     * 呼び出し元のstartActivityForResultで使用する
      *
-     * @param context データ
-     * @return boolean READ_EXTERNAL_STORAGEのパーミッションの戻り値がPERMISSION_GRANTEDであるか
-     */
-    private fun checkPermission(context: Context) : Boolean {
-        return ContextCompat.checkSelfPermission(context, READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-    }
-
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    private fun confirmAccessPermissions(context: Context) {
-        // 画像、映像、音楽ファイルのいずれかのアクセス権限がない場合はダイアログを起動
-        var isGranted = true
-        run breaking@ {
-            this.requestTiramisuPermissionsSet.forEach { permission ->
-                val accepted : Int = ContextCompat.checkSelfPermission(context, permission)
-                if (accepted != PackageManager.PERMISSION_GRANTED) {
-                    isGranted = false
-                    return@breaking
-                }
-            }
-        }
-    }
-
-    /**
-     * ファイル選択画面の出力
+     * 使用方法
+     * 
+     * ```
+     * val Intent = item.getOpenDocumentIntent()
+     * this.localFileSelectorLauncher.launch(intent)
+     * ```
      *
-     * @param context データ
+     * @return ファイル選択のIntent
      */
-    private fun openDocument(context: Context) {
-        // Intentの生成
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-        intent.addCategory(Intent.CATEGORY_DEFAULT)
-        // uriが設定されている場合
-        if (uri != null) {
-            // uriとMIMEタイプの設定
-            intent.setDataAndType(uri, mimeType)
+    fun getOpenDocumentIntent(): Intent {
+        return Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = mimeType
         }
-        else {
-            // MIMEタイプの設定
-            intent.type = mimeType
-        }
-        // ActivityもしくはFragmentで処理してもらう
-        (context as Activity).startActivityForResult(intent, requestCode)
     }
 
     /**
@@ -217,17 +157,4 @@ data class StorageFileSelect(
 
         return path
     }
-
-    /**
-     * Tiramisu以降で確認する必要のあるパーミッションの種類
-     *
-     * 1つでも許可が無い場合は要確認
-     */
-    @IgnoredOnParcel
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    private val requestTiramisuPermissionsSet = arrayOf(
-        Manifest.permission.READ_MEDIA_IMAGES,
-        Manifest.permission.READ_MEDIA_VIDEO,
-        Manifest.permission.READ_MEDIA_AUDIO
-    )
 }
