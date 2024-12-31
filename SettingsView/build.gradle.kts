@@ -70,7 +70,7 @@ dependencies {
 //    implementation("androidx.databinding:databinding-runtime:8.2.0")
 //    implementation("androidx.databinding:databinding-ktx:8.2.0")
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.21")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
     implementation("com.android.support:multidex:1.0.3")
 
     // テスト関連
@@ -102,7 +102,7 @@ publishing {
                 groupId = "io.github.kaztakgh"
                 artifactId = "settings-view"
                 version = "0.2.1.3"
-                artifact("$buildDir/outputs/aar/settingsview-$version-release.aar")
+                artifact("${layout.buildDirectory}/outputs/aar/settingsview-$version-release.aar")
             }
         }
     }

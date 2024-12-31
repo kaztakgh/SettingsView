@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "SettingsView"
 include(":SettingsView")
+include(":settingsview-sample")
